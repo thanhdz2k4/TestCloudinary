@@ -37,91 +37,93 @@ import coil.compose.rememberAsyncImagePainter
 import com.cloudinary.android.MediaManager
 import deso1.nguyenthethanh.testcloudinarywithjetpackcompose.ui.theme.TestCloudinaryWithJetpackcomposeTheme
 
-
-
+// Lớp MainActivity là Activity chính của ứng dụng
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {  // Phương thức khởi tạo Activity
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge()  // Bật hiển thị toàn màn hình không có thanh viền
 
-        // Initialize Cloudinary
+        // Cấu hình Cloudinary
         val config = mapOf(
-            "cloud_name" to "Thanh",
             "api_key" to "466154593341231",
             "api_secret" to "51yg5kMNxT9gxB8fmvRG_33Zzb0"
+            "cloud_name" to "dnlviqwjz",  // Tên cloud trên Cloudinary
         )
-        MediaManager.init(this, config)
+        MediaManager.init(this, config)  // Khởi tạo Cloudinary với cấu hình trên
 
         setContent {
-            ImageUploaderScreen()
+            ImageUploaderScreen()  // Hiển thị màn hình tải ảnh lên
         }
     }
 }
 
+// Hàm Composable để tạo giao diện tải ảnh lên Cloudinary
 @Composable
 fun ImageUploaderScreen() {
-    val context = LocalContext.current
-    var imageUrl by remember { mutableStateOf<String?>(null) }
-    var isUploading by remember { mutableStateOf(false) }
+    val context = LocalContext.current  // Lấy context hiện tại
+    var imageUrl by remember { mutableStateOf<String?>(null) }  // Biến trạng thái chứa URL của ảnh sau khi tải lên
+    var isUploading by remember { mutableStateOf(false) }  // Biến trạng thái theo dõi tiến trình tải ảnh
 
-    // Image Picker Launcher
+    // Khởi tạo trình chọn ảnh từ bộ nhớ thiết bị
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        if (uri == null) {
-            Log.e("ImageUploaderScreen", "No image selected")
+        if (uri == null) {  // Kiểm tra nếu không có ảnh nào được chọn
+            Log.e("ImageUploaderScreen", "No image selected")  // Ghi log lỗi
             return@rememberLauncherForActivityResult
         }
-        Log.d("ImageUploaderScreen", "Image selected: $uri")
-        isUploading = true
-        CloudinaryHelper.uploadImage(uri, { url ->
-            Log.d("ImageUploaderScreen", "Upload successful. URL: $url")
-            imageUrl = url
-            isUploading = false
+        Log.d("ImageUploaderScreen", "Image selected: $uri")  // Ghi log đường dẫn ảnh được chọn
+        isUploading = true  // Đánh dấu bắt đầu quá trình tải lên
+        CloudinaryHelper.uploadImage(uri, { url ->  // Gọi phương thức tải ảnh lên Cloudinary
+            Log.d("ImageUploaderScreen", "Upload successful. URL: $url")  // Ghi log khi tải lên thành công
+            imageUrl = url  // Cập nhật trạng thái URL của ảnh
+            isUploading = false  // Đánh dấu hoàn tất tải lên
         }, { error ->
-            Log.e("ImageUploaderScreen", "Upload failed: $error")
-            isUploading = false
+            Log.e("ImageUploaderScreen", "Upload failed: $error")  // Ghi log khi tải lên thất bại
+            isUploading = false  // Đánh dấu kết thúc tải lên dù thất bại
         })
     }
 
-    // Permission Launcher
+    // Khởi tạo trình xin quyền truy cập ảnh
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            Log.d("ImageUploaderScreen", "Permission granted")
-            imagePickerLauncher.launch("image/*")
+    ) { isGranted ->  // Kiểm tra kết quả xin quyền
+        if (isGranted) {  // Nếu được cấp quyền
+            Log.d("ImageUploaderScreen", "Permission granted")  // Ghi log quyền được cấp
+            imagePickerLauncher.launch("image/*")  // Mở trình chọn ảnh
         } else {
-            Log.e("ImageUploaderScreen", "Permission denied")
-            // Show a message to the user
+            Log.e("ImageUploaderScreen", "Permission denied")  // Ghi log khi quyền bị từ chối
             Toast.makeText(context, "Permission denied. Please enable it in settings.", Toast.LENGTH_SHORT).show()
+            // Hiển thị thông báo yêu cầu cấp quyền
         }
     }
 
+    // Giao diện màn hình tải ảnh
     Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = Modifier.fillMaxSize(),  // Chiếm toàn bộ kích thước màn hình
+        horizontalAlignment = Alignment.CenterHorizontally,  // Căn giữa theo chiều ngang
+        verticalArrangement = Arrangement.Center  // Căn giữa theo chiều dọc
     ) {
         Button(onClick = {
-            // Check and request permission before launching the image picker
-            permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES) // Use READ_MEDIA_IMAGES for Android 13+
+            // Kiểm tra và xin quyền trước khi chọn ảnh
+            permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
+            // Sử dụng quyền READ_MEDIA_IMAGES cho Android 13+
         }) {
-            Text("Pick and Upload Image")
+            Text("Pick and Upload Image")  // Nút chọn ảnh
         }
 
-        if (isUploading) {
+        if (isUploading) {  // Nếu đang tải ảnh, hiển thị vòng tròn tiến trình
             CircularProgressIndicator()
         }
 
-        imageUrl?.let { url ->
+        imageUrl?.let { url ->  // Nếu đã có ảnh tải lên, hiển thị ảnh
             Image(
-                painter = rememberAsyncImagePainter(url),
-                contentDescription = "Uploaded Image",
+                painter = rememberAsyncImagePainter(url),  // Tải ảnh từ URL
+                contentDescription = "Uploaded Image",  // Mô tả ảnh
                 modifier = Modifier
-                    .size(200.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
+                    .size(200.dp)  // Kích thước ảnh 200x200 dp
+                    .clip(RoundedCornerShape(10.dp))  // Bo góc ảnh
+                    .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))  // Viền xám quanh ảnh
             )
         }
     }
