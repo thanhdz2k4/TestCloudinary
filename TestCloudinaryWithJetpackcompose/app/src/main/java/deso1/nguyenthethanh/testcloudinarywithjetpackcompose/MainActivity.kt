@@ -45,9 +45,9 @@ class MainActivity : ComponentActivity() {
 
         // Cấu hình Cloudinary
         val config = mapOf(
-            "api_key" to "466154593341231",
-            "api_secret" to "51yg5kMNxT9gxB8fmvRG_33Zzb0"
-            "cloud_name" to "dnlviqwjz",  // Tên cloud trên Cloudinary
+            "cloud_name" to "",  // Tên cloud trên Cloudinary
+            "api_key" to "",  // API Key để xác thực
+            "api_secret" to ""  // API Secret (không nên để lộ mã này)
         )
         MediaManager.init(this, config)  // Khởi tạo Cloudinary với cấu hình trên
 
